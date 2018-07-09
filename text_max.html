@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Musico Maps</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="description" content="新宿近辺の楽器屋を集めたマップ。">
+    <style>
+      body {
+        position: relative;
+        height: 100%;
+        margin-top: -10px;
+      }
+      #head {
+        display: block;
+        width: 200px;
+        height: calc(100% - 15px);
+        background-color: #ffffff;
+        padding-left: 5px;
+        font-size: 40px;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+      #side {
+        height: calc(100% - 155px);
+        width: 100%;
+        overflow: auto;
+        font-size: 14px;
+      }
+      #will {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        background-color: #f5f5f5;
+      }
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+       #wrap {
+         background-color: #b1b1b1;
+         width: calc(100% - 215px);
+         height:100%;
+         margin-left: 10px;
+         display: block;
+       }
+       #map :after {
+         clear: both;
+         content: ;
+         display: block;
+       }
+      #map {
+        height: 100%;
+        width: 100%;
+        margin: 0 auto;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="wrap">
+      <div id="map"></div>
+    </div>
+
+    <div id="head">
+      <img src="http://dylgieta.html.xdomain.jp/img/logo.png" alt="">
+        <select name="area">
+          <option value="shinjuku">新宿</option>
+          <option value="ikebukuro">池袋</option>
+          <option value="akiba">秋葉原</option>
+          <option value="harajuku">原宿</option>
+        </select>
+      <div id="side"></div>
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyolytPsUMAxdp95mZOb-ycz5rkf0y-_U&callback="></script>
+    <script type="text/javascript">
+    window.onload = ()=> {
+
+      let latlng = [];
+      latlng[0] = new google.maps.LatLng(35.689592,139.700413); //Shinjuku
+      latlng[1] = new google.maps.LatLng(35.728573,139.711744); //Ikebukuro
+      latlng[2] = new google.maps.LatLng(35.698886,139.769875); //Akiba
+      latlng[3] = new google.maps.LatLng(35.672382,139.702992); //Harajuku
+
+    $(function(){
+      var map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 35.689592, lng: 139.700413},
+        zoom: 15
+      });
+
+      var infoWindow = [];
+      var marker = [];
+
+
+        $.ajax({
+          type: 'GET',
+          url: 'http://dylgieta.html.xdomain.jp/data.jsonp',
+          dataType: 'jsonp',
+          jsonpCallback: 'userData',
+          success: function(json){
+            var len = json.length;
+            let sidebar = document.getElementById('side');
+
+            for(var i=0; i < len; i++){
+             sidebar.insertAdjacentHTML('beforeend',`<div id="will">${json[i].contents}</div>`);
+               marker[i] = new google.maps.Marker({
+                position: {lat: json[i].lat, lng: json[i].lng},
+                animation: google.maps.Animation.DROP,
+                icon: "http://dylgieta.html.xdomain.jp/img/marker.png",
+                map: map
+             });
+
+             infoWindow[i]　= new google.maps.InfoWindow({
+              content: '<div class="venue">'+ json[i].contents + '<br />' + json[i].address + '</div>'
+             });
+             markerEvent(i);
+           }
+
+           let list = document.querySelectorAll('#will');
+           for (let i = 0; i < len; i++) {
+           list[i].addEventListener('click', () => {
+             infoWindow[i].open(map,marker[i]);
+           });
+           }
+
+           map.addListener('click',() => {
+             for (let i=0; i < len; i++){
+               infoWindow[i].close();
+             }
+           });
+
+           }
+             });
+
+             function markerEvent (i){
+               marker[i].addListener('click',function() {
+                 infoWindow[i].open(map, marker[i]);
+               });
+             }
+
+             document.querySelector('select[name="area"]').onchange=changeEventHandler;
+
+             function changeEventHandler (event){
+               switch (event.target.value) {
+                case "shinjuku":
+                  //alert(dataAll);
+                  map.setCenter(latlng[0]);
+                  map.setZoom(15);
+                  break;
+                case "ikebukuro":
+                  map.setCenter(latlng[1]);
+                  map.setZoom(15);
+                  break;
+                case "akiba":
+                  map.setCenter(latlng[2]);
+                  map.setZoom(15);
+                  break;
+                case "harajuku":
+                  map.setCenter(latlng[3]);
+                  map.setZoom(15);
+                  break;
+                }
+             }
+
+        });
+
+      }
+    </script>
+
+  </body>
+</html>
